@@ -33,12 +33,12 @@ def make_unique_folder(parent_folder=None):
 
 
 def remove_folder(folder):
-    if not exists(folder):
-        return
-    rmtree(folder)
+    if exists(folder):
+        rmtree(folder)
+    return folder
 
 
 def remove_path(path):
-    if not exists(path):
-        return
-    remove(path)
+    if exists(path):
+        remove(path)
+    return path
