@@ -1,6 +1,7 @@
 # vim
-*.sw[op]
+*.sw?
 *~
+.sw?
 # python
 *.egg
 *.egg-info
@@ -9,5 +10,5 @@
 .coverage
 .pytest_cache
 __pycache__
-build
-dist
+build/
+dist/

@@ -27,7 +27,9 @@ setup(
     classifiers=APP_CLASSIFIERS,
     author='Roy Hyunjin Han',
     author_email='rhh@crosscompute.com',
-    url='https://github.com/invisibleroads/invisibleroads-macros-disk',
+    url=(
+        'https://github.com/invisibleroads/'
+        'invisibleroads-macros-disk'),
     keywords='invisibleroads',
     packages=find_packages(),
     include_package_data=True,
