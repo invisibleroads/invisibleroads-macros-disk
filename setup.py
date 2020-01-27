@@ -24,6 +24,7 @@ setup(
     version='1.0.0',
     description='Shortcut functions for disk operations',
     long_description=DESCRIPTION,
+    long_description_content_type='text/markdown',
     classifiers=APP_CLASSIFIERS,
     author='Roy Hyunjin Han',
     author_email='rhh@crosscompute.com',
