@@ -1,5 +1,5 @@
 from os import makedirs, remove
-from os.path import exists, expanduser
+from os.path import expanduser
 from shutil import rmtree
 from tempfile import mkdtemp
 
@@ -20,9 +20,10 @@ class TemporaryStorage(object):
 
 
 def make_folder(folder):
-    if exists(folder):
-        return
-    makedirs(folder)
+    try:
+        makedirs(folder)
+    except FileExistsError:
+        pass
     return folder
 
 
@@ -33,12 +34,16 @@ def make_unique_folder(parent_folder=None):
 
 
 def remove_folder(folder):
-    if exists(folder):
+    try:
         rmtree(folder)
+    except FileNotFoundError:
+        pass
     return folder
 
 
 def remove_path(path):
-    if exists(path):
+    try:
         remove(path)
+    except FileNotFoundError:
+        pass
     return path
