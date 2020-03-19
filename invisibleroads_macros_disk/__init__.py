@@ -1,6 +1,8 @@
 from .operations import (
     TemporaryStorage,
+    make_enumerated_folder,
     make_folder,
+    make_random_folder,
     make_unique_folder,
     remove_folder,
     remove_path)
