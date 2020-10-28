@@ -80,6 +80,7 @@ def check_archive_functionality(f, tmpdir, bad_extension, good_extension):
 
     with raises(FileExtensionError):
         f(source_folder, source_folder + bad_extension)
+
     archive_path = f(source_folder)
     archive_folder = uncompress(archive_path)
     assert open(join(archive_folder, FILE_NAME)).read() == FILE_CONTENT
@@ -87,8 +88,8 @@ def check_archive_functionality(f, tmpdir, bad_extension, good_extension):
     archive_path = f(B_FOLDER, tmpdir.join(
         'b' + good_extension,
     ).strpath, with_link_purgation=False, with_link_expansion=False)
-    archive_folder = uncompress(
-        archive_path, tmpdir.join('b', '1'), with_link_purgation=False)
+    archive_folder = uncompress(archive_path, tmpdir.join(
+        'b', '1'), with_link_purgation=False)
     assert islink(join(archive_folder, FILE_NAME))
 
     '''
