@@ -1,25 +1,42 @@
-from invisibleroads_macros_disk import check_absolute_path
+from invisibleroads_macros_disk import (
+    check_absolute_path,
+    check_path,
+    check_relative_path,
+    has_extension,
+    has_name)
 from invisibleroads_macros_disk.exceptions import PathValidationError
 from os.path import join
 from pytest import raises
 
-from conftest import EXAMPLES_FOLDER
+from conftest import A_FOLDER, B_FOLDER, FILE_NAME
+
+
+def test_has_name():
+    assert has_name('a.txt', ['*.txt'])
+    assert not has_name('a.zip', ['*.txt'])
+
+
+def test_has_extension():
+    assert has_extension('a.txt', ['.txt'])
+    assert not has_extension('a.zip', ['.txt'])
+
+
+def test_check_relative_path():
+    path = join(A_FOLDER, FILE_NAME)
+    assert check_relative_path(path, A_FOLDER) == FILE_NAME
 
 
 def test_check_absolute_path():
-    a_folder = join(EXAMPLES_FOLDER, 'a')
-    b_folder = join(EXAMPLES_FOLDER, 'b')
-    file_name = 'file.txt'
+    path = join(A_FOLDER, FILE_NAME)
+    assert check_absolute_path(path, A_FOLDER) == path
 
-    # Check for an absolute path
-    assert check_absolute_path(file_name, a_folder) == join(
-        a_folder, file_name)
+
+def test_check_path():
+    path = join(B_FOLDER, FILE_NAME)
 
     # Do not allow linked paths that resolve outside the folder
     with raises(PathValidationError):
-        check_absolute_path(file_name, b_folder)
+        check_path(path, B_FOLDER)
 
     # Allow linked paths if they resolve inside trusted folders
-    assert check_absolute_path(
-        file_name, b_folder, trusted_folders=[a_folder]
-    ) == join(b_folder, file_name)
+    check_path(path, B_FOLDER, trusted_folders=[A_FOLDER])

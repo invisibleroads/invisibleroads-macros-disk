@@ -1,24 +1,50 @@
-from os.path import abspath, expanduser, join, realpath, relpath
+import fnmatch
+from os.path import abspath, basename, expanduser, realpath, relpath
 
 from .exceptions import PathValidationError
 
 
-def check_absolute_path(path, parent_folder, trusted_folders=None):
-    absolute_path = get_absolute_path(join(parent_folder, path))
-    absolute_folder = get_absolute_path(parent_folder)
+def has_name(path, expressions):
+    name = basename(path)
+    for expression in expressions:
+        if fnmatch.fnmatch(name, expression):
+            return True
+    return False
 
-    real_path = get_real_path(absolute_path)
-    real_folder = get_real_path(absolute_folder)
+
+def has_extension(path, extensions):
+    for extension in extensions:
+        if path.endswith(extension):
+            return True
+    return False
+
+
+def check_relative_path(path, folder, trusted_folders=None):
+    check_path(path, folder, trusted_folders)
+    return get_relative_path(path, folder)
+
+
+def check_absolute_path(path, folder, trusted_folders=None):
+    check_path(path, folder, trusted_folders)
+    return get_absolute_path(path)
+
+
+def check_path(path, folder, trusted_folders=None):
+    real_path = get_real_path(path)
+    real_folder = get_real_path(folder)
 
     for trusted_folder in trusted_folders or []:
-        if real_path.startswith(get_real_path(trusted_folder)):
+        trusted_folder = get_real_path(trusted_folder)
+        if real_path.startswith(trusted_folder):
             break
     else:
         if relpath(real_path, real_folder).startswith('..'):
-            raise PathValidationError('%s is not in %s' % (
-                real_path, real_folder))
+            raise PathValidationError({
+                'path': f'{real_path} is not in {real_folder}'})
 
-    return absolute_path
+
+def get_relative_path(path, folder):
+    return relpath(expanduser(path), expanduser(folder))
 
 
 def get_absolute_path(path):

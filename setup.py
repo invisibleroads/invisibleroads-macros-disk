@@ -21,7 +21,7 @@ DESCRIPTION = '\n\n'.join(open(join(FOLDER, x)).read().strip() for x in [
 
 setup(
     name='invisibleroads-macros-disk',
-    version='1.0.2',
+    version='1.0.3',
     description='Shortcut functions for disk operations',
     long_description=DESCRIPTION,
     long_description_content_type='text/markdown',
