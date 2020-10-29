@@ -37,6 +37,8 @@ def test_check_path():
     # Do not allow linked paths that resolve outside the folder
     with raises(PathValidationError):
         check_path(path, B_FOLDER)
+    with raises(PathValidationError):
+        check_path(path, B_FOLDER, trusted_folders=[B_FOLDER])
 
     # Allow linked paths if they resolve inside trusted folders
     check_path(path, B_FOLDER, trusted_folders=[A_FOLDER])
