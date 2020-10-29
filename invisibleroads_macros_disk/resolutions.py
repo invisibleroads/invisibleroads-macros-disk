@@ -1,13 +1,13 @@
 import fnmatch
-from os.path import abspath, basename, expanduser, realpath, relpath
+from os import walk
+from os.path import abspath, expanduser, join, realpath, relpath
 
 from .exceptions import PathValidationError
 
 
-def has_name(path, expressions):
-    name = basename(path)
+def is_matching_path(path, expressions):
     for expression in expressions:
-        if fnmatch.fnmatch(name, expression):
+        if fnmatch.fnmatch(path, expression):
             return True
     return False
 
@@ -53,3 +53,9 @@ def get_absolute_path(path):
 
 def get_real_path(path):
     return realpath(expanduser(path))
+
+
+def walk_paths(folder):
+    for root_folder, folders, names in walk(folder):
+        for name in folders + names:
+            yield join(root_folder, name)

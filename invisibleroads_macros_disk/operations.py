@@ -1,27 +1,24 @@
 import re
 import tarfile
 from invisibleroads_macros_security import make_random_string
-from os import makedirs, readlink, remove, unlink, walk
-from os.path import exists, isdir, islink, join, splitext
+from os import makedirs, remove, unlink
+from os.path import exists, islink, join, splitext
 from shutil import rmtree
 from tempfile import mkdtemp
-from zipfile import BadZipfile, ZipFile, ZipInfo, ZIP_DEFLATED
+from zipfile import BadZipfile, ZipFile, ZIP_DEFLATED
 
 from .constants import (
     ARCHIVE_TAR_EXTENSIONS,
     ARCHIVE_ZIP_EXTENSIONS,
-    IS_WINDOWS,
     TEMPORARY_FOLDER)
 from .exceptions import (
     BadArchiveError,
-    FileExtensionError,
-    PathValidationError)
+    FileExtensionError)
 from .resolutions import (
-    check_relative_path,
-    get_real_path,
     get_relative_path,
     has_extension,
-    has_name)
+    is_matching_path,
+    walk_paths)
 
 
 class TemporaryStorage(object):
@@ -65,13 +62,7 @@ def compress(
     return target_path
 
 
-def compress_zip(
-        source_folder,
-        target_path=None,
-        trusted_folders=None,
-        excluded_names=None,
-        with_link_purgation=True,
-        with_link_expansion=False):
+def compress_zip(source_folder, target_path=None, excluded_paths=None):
     'Compress folder as a zip archive'
     if not target_path:
         target_path = source_folder + ARCHIVE_ZIP_EXTENSIONS[0]
@@ -79,41 +70,14 @@ def compress_zip(
         archive_extensions = ARCHIVE_ZIP_EXTENSIONS
         raise FileExtensionError({
             'target_path': 'must end in ' + ' or '.join(archive_extensions)})
-    if with_link_expansion:
-        source_folder = get_real_path(source_folder)
-
     with ZipFile(
         target_path, 'w', ZIP_DEFLATED, allowZip64=True,
     ) as target_file:
-
-        def add(target_path, source_path):
-            if islink(source_path):
-                # https://learning-python.com/cgi/showcode.py?name=ziptools/ziptools/ziptools/zipsymlinks.py
-                zip_info = ZipInfo(target_path)
-                zip_info.create_system = 0 if IS_WINDOWS else 3
-                zip_info.external_attr = 0xA1ED0000
-                if isdir(source_path):
-                    zip_info.external_attr |= 0x10
-                target_file.writestr(zip_info, readlink(source_path))
-            else:
-                target_file.write(source_path, target_path)
-
-        _process_folder(
-            source_folder, trusted_folders, excluded_names,
-            reject_path=lambda source_path: None,
-            accept_path=add,
-            with_link_purgation=with_link_purgation,
-            with_link_expansion=with_link_expansion)
+        _process_folder(source_folder, excluded_paths, target_file.write)
     return target_path
 
 
-def compress_tar(
-        source_folder,
-        target_path=None,
-        trusted_folders=None,
-        excluded_names=None,
-        with_link_purgation=True,
-        with_link_expansion=False):
+def compress_tar(source_folder, target_path=None, excluded_paths=None):
     'Compress folder as a tar archive'
     if not target_path:
         target_path = source_folder + ARCHIVE_TAR_EXTENSIONS[0]
@@ -121,28 +85,15 @@ def compress_tar(
         archive_extensions = ARCHIVE_TAR_EXTENSIONS
         raise FileExtensionError({
             'target_path': 'must end in ' + ' or '.join(archive_extensions)})
-    if with_link_expansion:
-        source_folder = get_real_path(source_folder)
     compression_format = splitext(target_path)[1].lstrip('.')
     with tarfile.open(
-        target_path,
-        'w:' + compression_format,
-        dereference=with_link_expansion,
+        target_path, 'w:' + compression_format, dereference=False,
     ) as target_file:
-
-        def add(target_path, source_path):
-            target_file.add(source_path, target_path)
-
-        _process_folder(
-            source_folder, trusted_folders, excluded_names,
-            reject_path=lambda source_path: None,
-            accept_path=add,
-            with_link_purgation=with_link_purgation,
-            with_link_expansion=with_link_expansion)
+        _process_folder(source_folder, excluded_paths, target_file.add)
     return target_path
 
 
-def uncompress(source_path, target_folder=None, with_link_purgation=True):
+def uncompress(source_path, target_folder=None):
     if not exists(source_path):
         raise IOError({'source_path': 'is bad ' + source_path})
     if has_extension(source_path, ARCHIVE_ZIP_EXTENSIONS):
@@ -166,13 +117,9 @@ def uncompress(source_path, target_folder=None, with_link_purgation=True):
         target_folder = re.sub(extension_expression, '', source_path)
     source_file.extractall(target_folder)
     source_file.close()
-    if with_link_purgation:
-        _process_folder(
-            target_folder,
-            reject_path=lambda source_path: unlink(source_path),
-            accept_path=lambda source_path, target_folder: None,
-            with_link_purgation=with_link_purgation,
-            with_link_expansion=False)
+    for path in walk_paths(target_folder):
+        if islink(path):
+            unlink(path)
     return target_folder
 
 
@@ -229,29 +176,11 @@ def remove_path(path):
     return path
 
 
-def _process_folder(
-        source_folder,
-        trusted_folders=None,
-        excluded_names=None,
-        reject_path=lambda source_path: None,
-        accept_path=lambda source_path, target_path: None,
-        with_link_purgation=True,
-        with_link_expansion=False):
-    for root_folder, folders, names in walk(
-            source_folder, followlinks=with_link_expansion):
-        for source_name in folders + names:
-            if has_name(source_name, excluded_names or []):
-                continue
-            source_path = join(root_folder, source_name)
-            if with_link_purgation:
-                try:
-                    target_path = check_relative_path(
-                        source_path, source_folder, trusted_folders)
-                except PathValidationError:
-                    reject_path(source_path)
-                    continue
-            else:
-                target_path = get_relative_path(source_path, source_folder)
-            if with_link_expansion:
-                source_path = get_real_path(source_path)
-            accept_path(target_path, source_path)
+def _process_folder(source_folder, excluded_paths, process_path):
+    for source_path in walk_paths(source_folder):
+        if islink(source_path):
+            continue
+        if is_matching_path(source_path, excluded_paths or []):
+            continue
+        target_path = get_relative_path(source_path, source_folder)
+        process_path(source_path, target_path)
