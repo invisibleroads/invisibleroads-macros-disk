@@ -3,6 +3,7 @@ from .constants import (
     ARCHIVE_ZIP_EXTENSIONS,
     TEMPORARY_FOLDER)
 from .exceptions import (
+    BadArchiveError,
     FileExtensionError,
     InvisibleRoadsMacrosDiskError,
     PathValidationError)
