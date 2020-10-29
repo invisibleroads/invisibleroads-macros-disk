@@ -3,7 +3,7 @@ from invisibleroads_macros_disk import (
     check_path,
     check_relative_path,
     has_extension,
-    has_name)
+    is_matching_path)
 from invisibleroads_macros_disk.exceptions import PathValidationError
 from os.path import join
 from pytest import raises
@@ -11,9 +11,9 @@ from pytest import raises
 from conftest import A_FOLDER, B_FOLDER, FILE_NAME
 
 
-def test_has_name():
-    assert has_name('a.txt', ['*.txt'])
-    assert not has_name('a.zip', ['*.txt'])
+def test_is_matching_path():
+    assert is_matching_path('a.txt', ['*.txt'])
+    assert not is_matching_path('a.zip', ['*.txt'])
 
 
 def test_has_extension():

@@ -8,7 +8,3 @@ class PathValidationError(InvisibleRoadsMacrosDiskError):
 
 class FileExtensionError(InvisibleRoadsMacrosDiskError):
     pass
-
-
-class BadArchiveError(InvisibleRoadsMacrosDiskError):
-    pass

@@ -1,45 +1,56 @@
 from invisibleroads_macros_disk import (
     TemporaryStorage,
-    compress,
-    compress_zip,
-    compress_tar,
+    archive_safely,
+    archive_tar_safely,
+    archive_zip_safely,
     make_enumerated_folder,
     make_random_folder,
     make_unique_folder,
     remove_folder,
     remove_path,
-    uncompress,
+    unarchive_safely,
     ARCHIVE_TAR_EXTENSIONS,
     ARCHIVE_ZIP_EXTENSIONS,
     FileExtensionError)
 from invisibleroads_macros_security import ALPHABET
 from os.path import basename, exists, islink, join
 from pytest import raises
+from shutil import make_archive
 from tempfile import mkstemp
 
-from conftest import (
-    A_FOLDER, B_FOLDER, EXAMPLES_FOLDER, FILE_CONTENT, FILE_NAME)
+from conftest import A_FOLDER, B_FOLDER, FILE_CONTENT, FILE_NAME
 
 
-def test_compress(tmpdir):
+def test_archive_safely(tmpdir):
     check_archive_functionality(
-        compress, tmpdir,
+        archive_safely, tmpdir,
         bad_extension='.x',
         good_extension=ARCHIVE_TAR_EXTENSIONS[0])
 
 
-def test_compress_zip(tmpdir):
+def test_archive_zip_safely(tmpdir):
     check_archive_functionality(
-        compress_zip, tmpdir,
+        archive_zip_safely, tmpdir,
         bad_extension=ARCHIVE_TAR_EXTENSIONS[0],
         good_extension=ARCHIVE_ZIP_EXTENSIONS[0])
 
 
-def test_compress_tar(tmpdir):
+def test_archive_tar_safely(tmpdir):
     check_archive_functionality(
-        compress_tar, tmpdir,
+        archive_tar_safely, tmpdir,
         bad_extension=ARCHIVE_ZIP_EXTENSIONS[0],
         good_extension=ARCHIVE_TAR_EXTENSIONS[0])
+
+
+def test_unarchive_safely(tmpdir):
+    with raises(FileExtensionError):
+        unarchive_safely(tmpdir.join('x.x').strpath)
+    archive_basename = tmpdir.join('b').strpath
+    make_archive(archive_basename, 'gztar', B_FOLDER)
+    archive_path = archive_basename + '.tar.gz'
+    archive_folder = unarchive_safely(archive_path)
+    assert islink(join(B_FOLDER, FILE_NAME))
+    assert not exists(join(archive_folder, FILE_NAME))
 
 
 def test_temporary_storage():
@@ -73,38 +84,25 @@ def test_remove_path():
     remove_path(temporary_path)
 
 
-def check_archive_functionality(f, tmpdir, bad_extension, good_extension):
+def check_archive_functionality(
+        archive, tmpdir, bad_extension, good_extension):
     source_folder = tmpdir.mkdir('x')
     source_folder.join(FILE_NAME).write(FILE_CONTENT)
     source_folder = source_folder.strpath
 
     with raises(FileExtensionError):
-        f(source_folder, source_folder + bad_extension)
+        archive(source_folder, source_folder + bad_extension)
 
-    archive_path = f(source_folder)
-    archive_folder = uncompress(archive_path)
+    archive_path = archive(source_folder)
+    archive_folder = unarchive_safely(archive_path)
     assert open(join(archive_folder, FILE_NAME)).read() == FILE_CONTENT
 
-    archive_path = f(B_FOLDER, tmpdir.join(
-        'b' + good_extension,
-    ).strpath, with_link_purgation=False, with_link_expansion=False)
-    archive_folder = uncompress(archive_path, tmpdir.join(
-        'b', '1'), with_link_purgation=False)
-    assert islink(join(archive_folder, FILE_NAME))
-
-    '''
-    archive_path = f(EXAMPLES_FOLDER, tmpdir.join(
-        'examples' + good_extension).strpath, with_link_expansion=True)
-    archive_folder = uncompress(archive_path, tmpdir.join('examples', '2'))
-    assert not islink(join(archive_folder, 'b', FILE_NAME))
-
-    archive_path = f(B_FOLDER, tmpdir.join('b' + good_extension).strpath)
-    archive_folder = uncompress(archive_path, tmpdir.join('b', '1'))
+    archive_path = archive(A_FOLDER, tmpdir.join(
+        'a' + good_extension).strpath, excluded_paths=['*.txt'])
+    archive_folder = unarchive_safely(archive_path)
     assert not exists(join(archive_folder, FILE_NAME))
 
-    archive_path = compress_tar(B_FOLDER, tmpdir.join(
-        'b' + ARCHIVE_TAR_EXTENSIONS[0],
-    ).strpath, trusted_folders=[A_FOLDER], with_link_expansion=True)
-    archive_folder = uncompress(archive_path, tmpdir.join('b', '2'))
-    assert exists(join(archive_folder, FILE_NAME))
-    '''
+    archive_path = archive(B_FOLDER, tmpdir.join(
+        'b' + good_extension).strpath)
+    archive_folder = unarchive_safely(archive_path)
+    assert not exists(join(archive_folder, FILE_NAME))

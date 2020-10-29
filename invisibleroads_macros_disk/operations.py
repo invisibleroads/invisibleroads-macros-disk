@@ -2,17 +2,16 @@ import re
 import tarfile
 from invisibleroads_macros_security import make_random_string
 from os import makedirs, remove, unlink
-from os.path import exists, islink, join, splitext
-from shutil import rmtree
+from os.path import islink, join, splitext
+from shutil import rmtree, unpack_archive
 from tempfile import mkdtemp
-from zipfile import BadZipfile, ZipFile, ZIP_DEFLATED
+from zipfile import ZipFile, ZIP_DEFLATED
 
 from .constants import (
     ARCHIVE_TAR_EXTENSIONS,
     ARCHIVE_ZIP_EXTENSIONS,
     TEMPORARY_FOLDER)
 from .exceptions import (
-    BadArchiveError,
     FileExtensionError)
 from .resolutions import (
     get_relative_path,
@@ -33,28 +32,15 @@ class TemporaryStorage(object):
         remove_folder(self.folder)
 
 
-def compress(
-        source_folder,
-        target_path=None,
-        trusted_folders=None,
-        excluded_names=None,
-        with_link_purgation=True,
-        with_link_expansion=False):
-    'Compress folder. Specify archive extension in target_path.'
+def archive_safely(source_folder, target_path=None, excluded_paths=None):
+    'Archive without symbolic links. Specify archive extension in target_path.'
     if not target_path:
         target_path = source_folder + ARCHIVE_ZIP_EXTENSIONS[0]
-    arguments = [
-        source_folder,
-        target_path,
-        trusted_folders,
-        excluded_names,
-        with_link_purgation,
-        with_link_expansion,
-    ]
+    arguments = source_folder, target_path, excluded_paths
     if has_extension(target_path, ARCHIVE_ZIP_EXTENSIONS):
-        compress_zip(*arguments)
+        archive_zip_safely(*arguments)
     elif has_extension(target_path, ARCHIVE_TAR_EXTENSIONS):
-        compress_tar(*arguments)
+        archive_tar_safely(*arguments)
     else:
         archive_extensions = ARCHIVE_ZIP_EXTENSIONS + ARCHIVE_TAR_EXTENSIONS
         raise FileExtensionError({
@@ -62,8 +48,8 @@ def compress(
     return target_path
 
 
-def compress_zip(source_folder, target_path=None, excluded_paths=None):
-    'Compress folder as a zip archive'
+def archive_zip_safely(source_folder, target_path=None, excluded_paths=None):
+    'Archive folder as a zip archive without symbolic links'
     if not target_path:
         target_path = source_folder + ARCHIVE_ZIP_EXTENSIONS[0]
     if not has_extension(target_path, ARCHIVE_ZIP_EXTENSIONS):
@@ -73,12 +59,12 @@ def compress_zip(source_folder, target_path=None, excluded_paths=None):
     with ZipFile(
         target_path, 'w', ZIP_DEFLATED, allowZip64=True,
     ) as target_file:
-        _process_folder(source_folder, excluded_paths, target_file.write)
+        _archive_folder(source_folder, excluded_paths, target_file.write)
     return target_path
 
 
-def compress_tar(source_folder, target_path=None, excluded_paths=None):
-    'Compress folder as a tar archive'
+def archive_tar_safely(source_folder, target_path=None, excluded_paths=None):
+    'Archive folder as a tar archive without symbolic links'
     if not target_path:
         target_path = source_folder + ARCHIVE_TAR_EXTENSIONS[0]
     if not has_extension(target_path, ARCHIVE_TAR_EXTENSIONS):
@@ -89,25 +75,16 @@ def compress_tar(source_folder, target_path=None, excluded_paths=None):
     with tarfile.open(
         target_path, 'w:' + compression_format, dereference=False,
     ) as target_file:
-        _process_folder(source_folder, excluded_paths, target_file.add)
+        _archive_folder(source_folder, excluded_paths, target_file.add)
     return target_path
 
 
-def uncompress(source_path, target_folder=None):
-    if not exists(source_path):
-        raise IOError({'source_path': 'is bad ' + source_path})
+def unarchive_safely(source_path, target_folder=None):
+    'Unarchive folder without symbolic links'
     if has_extension(source_path, ARCHIVE_ZIP_EXTENSIONS):
-        try:
-            source_file = ZipFile(source_path, 'r')
-        except BadZipfile:
-            raise BadArchiveError({'source_path': 'is unreadable'})
         extension_expression = r'\.zip$'
     elif has_extension(source_path, ARCHIVE_TAR_EXTENSIONS):
         compression_format = splitext(source_path)[1].lstrip('.')
-        try:
-            source_file = tarfile.open(source_path, 'r:' + compression_format)
-        except tarfile.ReadError:
-            raise BadArchiveError({'source_path': 'is unreadable'})
         extension_expression = r'\.tar\.%s$' % compression_format
     else:
         archive_extensions = ARCHIVE_ZIP_EXTENSIONS + ARCHIVE_TAR_EXTENSIONS
@@ -115,8 +92,7 @@ def uncompress(source_path, target_folder=None):
             'source_path': 'must end in ' + ' or '.join(archive_extensions)})
     if not target_folder:
         target_folder = re.sub(extension_expression, '', source_path)
-    source_file.extractall(target_folder)
-    source_file.close()
+    unpack_archive(source_path, target_folder)
     for path in walk_paths(target_folder):
         if islink(path):
             unlink(path)
@@ -176,11 +152,11 @@ def remove_path(path):
     return path
 
 
-def _process_folder(source_folder, excluded_paths, process_path):
+def _archive_folder(source_folder, excluded_paths, archive_path):
     for source_path in walk_paths(source_folder):
         if islink(source_path):
             continue
         if is_matching_path(source_path, excluded_paths or []):
             continue
         target_path = get_relative_path(source_path, source_folder)
-        process_path(source_path, target_path)
+        archive_path(source_path, target_path)

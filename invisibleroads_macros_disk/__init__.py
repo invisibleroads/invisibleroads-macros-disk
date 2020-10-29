@@ -3,22 +3,21 @@ from .constants import (
     ARCHIVE_ZIP_EXTENSIONS,
     TEMPORARY_FOLDER)
 from .exceptions import (
-    BadArchiveError,
     FileExtensionError,
     InvisibleRoadsMacrosDiskError,
     PathValidationError)
 from .operations import (
     TemporaryStorage,
-    compress,
-    compress_tar,
-    compress_zip,
+    archive_safely,
+    archive_tar_safely,
+    archive_zip_safely,
     make_enumerated_folder,
     make_folder,
     make_random_folder,
     make_unique_folder,
     remove_folder,
     remove_path,
-    uncompress)
+    unarchive_safely)
 from .resolutions import (
     check_absolute_path,
     check_path,
@@ -27,6 +26,7 @@ from .resolutions import (
     get_real_path,
     get_relative_path,
     has_extension,
-    has_name)
+    is_matching_path,
+    walk_paths)
 
 # flake8: noqa: E401
