@@ -1,7 +1,9 @@
 import fnmatch
+from hashlib import blake2b
 from os import walk
 from os.path import abspath, expanduser, join, realpath, relpath
 
+from .constants import CHUNK_SIZE_IN_BYTES
 from .exceptions import PathValidationError
 
 
@@ -59,3 +61,11 @@ def walk_paths(folder):
     for root_folder, folders, names in walk(folder):
         for name in folders + names:
             yield join(root_folder, name)
+
+
+def make_file_hash(path, compute_hash=blake2b):
+    with open(path, 'rb') as f:
+        file_hash = compute_hash(usedforsecurity=False)
+        while chunk := f.read(CHUNK_SIZE_IN_BYTES):
+            file_hash.update(chunk)
+    return file_hash.hexdigest()
