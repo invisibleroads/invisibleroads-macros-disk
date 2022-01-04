@@ -4,16 +4,17 @@ from invisibleroads_macros_security import make_random_string
 from os import makedirs, remove
 from os.path import isdir, islink, join, splitext
 from shutil import rmtree
-from tempfile import mkdtemp
 from zipfile import BadZipfile, ZipFile, ZIP_DEFLATED
 
 from .constants import (
     ARCHIVE_TAR_EXTENSIONS,
     ARCHIVE_ZIP_EXTENSIONS,
+    NAME_LENGTH,
     TEMPORARY_FOLDER)
 from .exceptions import (
     BadArchiveError,
-    FileExtensionError)
+    FileExtensionError,
+    InvisibleRoadsMacrosDiskError)
 from .resolutions import (
     get_relative_path,
     has_extension,
@@ -23,8 +24,11 @@ from .resolutions import (
 
 class TemporaryStorage(object):
 
-    def __init__(self, base_folder=None):
-        self.folder = make_unique_folder(base_folder or TEMPORARY_FOLDER)
+    def __init__(
+            self, base_folder=TEMPORARY_FOLDER, name_length=NAME_LENGTH,
+            with_fixed_length=False):
+        self.folder = make_random_folder(
+            base_folder, name_length, with_fixed_length)
 
     def __enter__(self):
         return self
@@ -121,22 +125,21 @@ def make_enumerated_folder(base_folder, target_index=1):
     return target_folder
 
 
-def make_random_folder(base_folder, target_length):
+def make_random_folder(
+        base_folder=TEMPORARY_FOLDER, name_length=NAME_LENGTH,
+        with_fixed_length=False):
     while True:
-        target_index = make_random_string(target_length)
-        target_folder = join(base_folder, target_index)
+        folder_name = make_random_string(name_length)
+        folder = join(base_folder, folder_name)
         try:
-            makedirs(target_folder)
+            makedirs(folder)
             break
         except FileExistsError:
-            target_length += 1
-    return target_folder
-
-
-def make_unique_folder(base_folder=None):
-    if base_folder:
-        make_folder(base_folder)
-    return mkdtemp(dir=base_folder)
+            if with_fixed_length:
+                raise InvisibleRoadsMacrosDiskError(
+                    f'could not make random folder in {base_folder}')
+            name_length += 1
+    return folder
 
 
 def make_folder(folder):
@@ -171,3 +174,6 @@ def _compress_folder(source_folder, excluded_paths, compress_path):
             continue
         target_path = get_relative_path(source_path, source_folder)
         compress_path(source_path, target_path)
+
+
+make_unique_folder = make_random_folder

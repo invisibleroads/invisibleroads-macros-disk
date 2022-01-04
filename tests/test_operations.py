@@ -2,13 +2,14 @@ import tarfile
 from invisibleroads_macros_disk import (
     BadArchiveError,
     FileExtensionError,
+    InvisibleRoadsMacrosDiskError,
     TemporaryStorage,
     archive_safely,
     archive_tar_safely,
     archive_zip_safely,
     make_enumerated_folder,
+    make_folder,
     make_random_folder,
-    make_unique_folder,
     remove_folder,
     remove_path,
     unarchive_safely,
@@ -120,10 +121,14 @@ def test_make_random_folder(tmpdir):
     for i in range(len(ALPHABET) + 1):
         folder = make_random_folder(tmpdir, 1)
         assert len(basename(folder)) >= 1
+    for x in ALPHABET:
+        make_folder(tmpdir.join(x).strpath)
+    with raises(InvisibleRoadsMacrosDiskError):
+        folder = make_random_folder(tmpdir, 1, with_fixed_length=True)
 
 
 def test_remove_folder():
-    temporary_folder = make_unique_folder()
+    temporary_folder = make_random_folder()
     remove_folder(temporary_folder)
     remove_folder(temporary_folder)
 
