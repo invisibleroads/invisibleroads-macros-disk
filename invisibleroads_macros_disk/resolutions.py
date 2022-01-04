@@ -7,6 +7,13 @@ from .constants import CHUNK_SIZE_IN_BYTES
 from .exceptions import PathValidationError
 
 
+def has_extension(path, extensions):
+    for extension in extensions:
+        if path.endswith(extension):
+            return True
+    return False
+
+
 def is_matching_path(path, expressions):
     for expression in expressions:
         if fnmatch.fnmatch(path, expression):
@@ -14,11 +21,10 @@ def is_matching_path(path, expressions):
     return False
 
 
-def has_extension(path, extensions):
-    for extension in extensions:
-        if path.endswith(extension):
-            return True
-    return False
+def is_path_in_folder(path, folder):
+    real_path = get_real_path(path)
+    real_folder = get_real_path(folder)
+    return real_path.startswith(real_folder)
 
 
 def check_relative_path(path, folder, trusted_folders=None):
@@ -33,14 +39,13 @@ def check_absolute_path(path, folder, trusted_folders=None):
 
 def check_path(path, folder, trusted_folders=None):
     real_path = get_real_path(path)
-    real_folder = get_real_path(folder)
-
     for trusted_folder in trusted_folders or []:
         trusted_folder = get_real_path(trusted_folder)
         if real_path.startswith(trusted_folder):
             break
     else:
-        if relpath(real_path, real_folder).startswith('..'):
+        real_folder = get_real_path(folder)
+        if not real_path.startswith(real_folder):
             raise PathValidationError({
                 'path': f'{real_path} is not in {real_folder}'})
 

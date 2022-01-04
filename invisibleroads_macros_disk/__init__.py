@@ -28,6 +28,7 @@ from .resolutions import (
     get_relative_path,
     has_extension,
     is_matching_path,
+    is_path_in_folder,
     make_file_hash,
     walk_paths)
 
