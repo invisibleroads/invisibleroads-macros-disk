@@ -24,12 +24,12 @@ from .resolutions import (
     check_path,
     check_relative_path,
     get_absolute_path,
+    get_file_hash,
     get_real_path,
     get_relative_path,
     has_extension,
     is_matching_path,
     is_path_in_folder,
-    make_file_hash,
     walk_paths)
 
 # flake8: noqa: E401

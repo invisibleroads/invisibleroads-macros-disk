@@ -68,7 +68,7 @@ def walk_paths(folder):
             yield join(root_folder, name)
 
 
-def make_file_hash(path, compute_hash=blake2b):
+def get_file_hash(path, compute_hash=blake2b):
     with open(path, 'rb') as f:
         file_hash = compute_hash(usedforsecurity=False)
         while chunk := f.read(CHUNK_SIZE_IN_BYTES):

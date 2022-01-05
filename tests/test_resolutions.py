@@ -2,10 +2,10 @@ from invisibleroads_macros_disk import (
     check_absolute_path,
     check_path,
     check_relative_path,
+    get_file_hash,
     has_extension,
     is_matching_path,
-    is_path_in_folder,
-    make_file_hash)
+    is_path_in_folder)
 from invisibleroads_macros_disk.exceptions import PathValidationError
 from os.path import join
 from pytest import raises
@@ -51,5 +51,5 @@ def test_check_path():
     check_path(path, B_FOLDER, trusted_folders=[A_FOLDER])
 
 
-def test_make_file_hash():
-    assert make_file_hash(join(A_FOLDER, FILE_NAME)).startswith('e')
+def test_get_file_hash():
+    assert get_file_hash(join(A_FOLDER, FILE_NAME)).startswith('e')
