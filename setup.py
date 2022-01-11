@@ -22,7 +22,7 @@ DESCRIPTION = '\n\n'.join(open(join(FOLDER, x)).read().strip() for x in [
 
 setup(
     name='invisibleroads-macros-disk',
-    version='1.2.1',
+    version='1.2.2',
     description='Shortcut functions for disk operations',
     long_description=DESCRIPTION,
     long_description_content_type='text/markdown',
@@ -36,6 +36,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     zip_safe=True,
-    extras_require={'test': TEST_REQUIREMENTS},
+    python_requires='>=3.9',
     install_requires=APP_REQUIREMENTS,
+    extras_require={'test': TEST_REQUIREMENTS},
     entry_points=ENTRY_POINTS)
