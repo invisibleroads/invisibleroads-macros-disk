@@ -24,6 +24,7 @@ from .resolutions import (
     check_path,
     check_relative_path,
     get_absolute_path,
+    get_asset_path,
     get_file_hash,
     get_real_path,
     get_relative_path,
@@ -31,5 +32,6 @@ from .resolutions import (
     is_matching_path,
     is_path_in_folder,
     walk_paths)
+
 
 # flake8: noqa: E401

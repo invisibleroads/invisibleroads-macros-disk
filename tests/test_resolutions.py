@@ -1,13 +1,15 @@
+from os.path import join
+
 from invisibleroads_macros_disk import (
     check_absolute_path,
     check_path,
     check_relative_path,
+    get_asset_path,
     get_file_hash,
     has_extension,
     is_matching_path,
     is_path_in_folder)
 from invisibleroads_macros_disk.exceptions import PathValidationError
-from os.path import join
 from pytest import raises
 
 from conftest import A_FOLDER, B_FOLDER, FILE_NAME
@@ -53,3 +55,10 @@ def test_check_path():
 
 def test_get_file_hash():
     assert get_file_hash(join(A_FOLDER, FILE_NAME)).startswith('e')
+
+
+def test_get_asset_path():
+    package_name = 'invisibleroads_macros_disk'
+    assert get_asset_path(package_name + ':__init__.py') == __import__(
+        package_name).__file__
+    assert get_asset_path('README.md') == 'README.md'

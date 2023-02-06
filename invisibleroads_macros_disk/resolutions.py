@@ -2,6 +2,7 @@ import fnmatch
 from hashlib import blake2b
 from os import walk
 from os.path import abspath, expanduser, join, realpath, relpath
+from pathlib import Path
 
 from .constants import CHUNK_SIZE_IN_BYTES
 from .exceptions import PathValidationError
@@ -74,3 +75,19 @@ def get_file_hash(path, compute_hash=blake2b):
         while chunk := f.read(CHUNK_SIZE_IN_BYTES):
             file_hash.update(chunk)
     return file_hash.hexdigest()
+
+
+def get_asset_path(asset_uri):
+    asset_parts = asset_uri.split(':')
+    if len(asset_parts) > 1:
+        package_name, relative_path = asset_parts
+        package_name = package_name.strip()
+    else:
+        package_name, relative_path = '', asset_parts[0]
+    if package_name:
+        package = __import__(package_name)
+        package_folder = Path(package.__file__).parent
+        path = str(package_folder / relative_path)
+    else:
+        path = relative_path
+    return path

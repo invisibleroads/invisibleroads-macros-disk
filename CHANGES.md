@@ -1,5 +1,5 @@
 # 1.2
-- Add is_path_in_folder, get_file_hash
+- Add is_path_in_folder, get_file_hash, get_asset_path
 
 # 1.1
 - Restore archive_safely, unarchive_safely
