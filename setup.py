@@ -9,7 +9,8 @@ APP_CLASSIFIERS = [
     'License :: OSI Approved :: MIT License',
 ]
 APP_REQUIREMENTS = [
-    'invisibleroads-macros-security >= 1.0.1',
+    'invisibleroads-macros-security >= 1.0.3',
+    'platformdirs',
 ]
 TEST_REQUIREMENTS = [
     'pytest',
@@ -22,7 +23,7 @@ DESCRIPTION = '\n\n'.join(open(join(FOLDER, x)).read().strip() for x in [
 
 setup(
     name='invisibleroads-macros-disk',
-    version='1.2.2',
+    version='1.3.0',
     description='Shortcut functions for disk operations',
     long_description=DESCRIPTION,
     long_description_content_type='text/markdown',

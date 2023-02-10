@@ -1,10 +1,14 @@
 import re
 import tarfile
-from invisibleroads_macros_security import make_random_string
 from os import makedirs, remove
-from os.path import isdir, islink, join, splitext
-from shutil import rmtree
+from os.path import exists, isdir, islink, join, splitext
+from shutil import copyfile, rmtree
+from urllib.request import urlretrieve as download
 from zipfile import BadZipfile, ZipFile, ZIP_DEFLATED
+
+from invisibleroads_macros_security import (
+    get_hash,
+    make_random_string)
 
 from .constants import (
     ARCHIVE_TAR_EXTENSIONS,
@@ -164,6 +168,18 @@ def remove_path(path):
     except FileNotFoundError:
         pass
     return path
+
+
+def cache_download(target_path, source_uri):
+    if not exists(target_path):
+        downloads_folder = make_folder(join(TEMPORARY_FOLDER, 'downloads'))
+        source_path = join(downloads_folder, get_hash(source_uri))
+        if exists(source_path):
+            copyfile(source_path, target_path)
+        else:
+            download(source_uri, target_path)
+            copyfile(target_path, source_path)
+    return target_path
 
 
 def _compress_folder(source_folder, excluded_paths, compress_path):

@@ -1,13 +1,21 @@
-# 1.2
-- Add is_path_in_folder, get_file_hash, get_asset_path
+## 1.3
 
-# 1.1
-- Restore archive_safely, unarchive_safely
-- Restore check_relative_path, get_relative_path
-- Restore has_extension, is_matching_paths, walk_paths
+- Add `cache_download`
+- Use `platformdirs.user_cache_dir` for OS independent temporary folder
 
-# 1.0
-- Restore TemporaryStorage, make_folder, make_unique_folder
-- Restore remove_folder, remove_path
-- Restore check_absolute_path, get_absolute_path, get_real_path
-- Restore make_enumerated_folder, make_random_folder
+## 1.2
+
+- Add `is_path_in_folder`, `get_file_hash`, `get_asset_path`
+
+## 1.1
+
+- Restore `archive_safely`, `unarchive_safely`
+- Restore `check_relative_path`, `get_relative_path`
+- Restore `has_extension`, `is_matching_paths`, `walk_paths`
+
+## 1.0
+
+- Restore `TemporaryStorage`, `make_folder`, `make_unique_folder`
+- Restore `remove_folder`, `remove_path`
+- Restore `check_absolute_path`, `get_absolute_path`, `get_real_path`
+- Restore `make_enumerated_folder`, `make_random_folder`

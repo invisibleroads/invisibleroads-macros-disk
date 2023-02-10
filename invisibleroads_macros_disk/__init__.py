@@ -12,6 +12,7 @@ from .operations import (
     archive_safely,
     archive_tar_safely,
     archive_zip_safely,
+    cache_download,
     make_enumerated_folder,
     make_folder,
     make_random_folder,

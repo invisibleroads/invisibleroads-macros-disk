@@ -1,7 +1,8 @@
-from os.path import expanduser
+from platformdirs import user_cache_dir
 
 
-TEMPORARY_FOLDER = expanduser('~/.tmp')
+TEMPORARY_FOLDER = user_cache_dir(
+    'invisibleroads-macros-disk', 'invisibleroads')
 ARCHIVE_ZIP_EXTENSIONS = '.zip',
 ARCHIVE_TAR_EXTENSIONS = '.tar.gz', '.tar.bz2', '.tar.xz'
 
